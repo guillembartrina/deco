@@ -70,7 +70,7 @@ class CheckCapturesWrapperPhase extends CheckCaptures:
               laneInfo.dual ++= symbol.allOverriddenSymbols.filter(_.isDefinedInSource).map(_ -> NoSymbol)
             case Suspendable.No => ()
         
-        case apply: Apply if apply.fun.symbol.isTerm && !apply.fun.symbol.isConstructor && !isFunctionApply(apply.fun.symbol) =>
+        case apply: Apply if apply.fun.symbol.isTerm && !apply.fun.symbol.isConstructor && !isFunctionApply(apply.fun.symbol) && !defn.pureMethods.contains(apply.fun.symbol) =>
           val funSym = apply.fun.symbol.asTerm
           if funSym != library.boundary_suspend && funSym != library.Continuation_resume then
             def getObjectAndMoreArgs(tree: Tree, moreArgs: List[Tree]): (Tree, List[Tree]) = tree match

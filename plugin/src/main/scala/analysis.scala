@@ -85,17 +85,28 @@ def noCaptureCheckingBypass(symbol: TermSymbol)(using Context): Boolean =
   && symbol != library.boundary__pushFrame
   && symbol != library.boundary__result
   && (
-    (noCaptureChecking && false)
-    || (compileScala2Library
-      && !ctx.compilationUnit.needsCaptureChecking
+    (noCaptureChecking
       && !symbol.owner.isPrimitiveValueClass
       && !symbol.owner.linkedClass.isPrimitiveValueClass
+      && !defn.pureMethods.contains(symbol)
+      && !defn.ObjectMethods.contains(symbol)
+      && !defn.pureSimpleClasses.contains(symbol.owner)
+      && symbol.name.toString() != "synchronized"
+      /*&& false*/)
+    || (compileScala2Library
+      //&& !ctx.compilationUnit.needsCaptureChecking
+      //&& !symbol.owner.isPrimitiveValueClass
+      //&& !symbol.owner.linkedClass.isPrimitiveValueClass
       //&& symbol.name.toString() != "synchronized"
       //&& !defn.pureMethods.contains(symbol)
       //&& !defn.ObjectMethods.contains(symbol)
       //&& !defn.pureSimpleClasses.contains(symbol.owner)
       //&& symbol.name.toString() != "execute"
-      && symbol.name.startsWith("flatMap")
+      //&& symbol.name.startsWith("flatMap")
+      && (
+        symbol.enclosingClass.flatName.toString().contains("Future")
+        || symbol.enclosingClass.flatName.toString().contains("Option")
+      )
     )
   )
 

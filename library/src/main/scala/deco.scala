@@ -17,7 +17,7 @@ object boundary:
   
   opaque type Continuation[-A, +R] = ContinuationState
 
-  def suspend[A, R](body: Continuation[A, R]^{ucap} => R)(using Label[R]^): A = suspendImpl(body)
+  def suspend[A, R](handler: Continuation[A, R]^{ucap} => R)(using Label[R]^): A = suspendImpl(handler)
   
   extension [A, R](cont: Continuation[A, R]^{ucap})
     def resume(value: A): R = resumeImpl(cont.unsafeAssumePure, value)
@@ -92,11 +92,11 @@ object boundary:
     else
       res
 
-  private inline def suspendImpl[A, R](body: Continuation[A, R] => R)(using label: Label[R]): A =
+  private inline def suspendImpl[A, R](handler: Continuation[A, R] => R)(using label: Label[R]): A =
     //println(s"suspend: suspending to ${label.prompt}")
     _suspending = true
     suspending_label = label
-    suspending_handler = body
+    suspending_handler = handler
     defaultValue[A]
 
   private inline def resumeImpl[A, R](cont: Continuation[A, R], value: A): R =

@@ -75,7 +75,7 @@ class CallRedirectionPhase extends PluginPhase with IdentityDenotTransformer:
           tree.subst(List(symbol), List(laneInfo.dual(symbol)))
         else
           // sanity check
-          assert(!symbol.isDefinedInBinary)
+          //assert(!symbol.isDefinedInBinary)
           tree
       case _ => super.transform(tree)
 
