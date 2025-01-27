@@ -2,11 +2,11 @@
 
 ## prerequisites
 
-* This plugin depends on a private fork of the compiler --> https://github.com/guillembartrina/scala3/tree/suspendable<br>
+* This plugin depends on a private fork of the compiler --> https://github.com/guillembartrina/scala3/tree/ucap<br>
   run `sbt scala3-compiler/publishLocal`
 
-* And on a custom build of the scala-native libraries --> https://github.com/guillembartrina/scala-native/tree/newlib<br>
-  run `sbt publish-local-dev 3.6.4-RC1-bin-SNAPSHOT`
+* And on a custom build of the scala-native libraries --> https://github.com/guillembartrina/scala-native/tree/fork<br>
+  run `sbt publish-local-dev 3.7.0-RC1-bin-SNAPSHOT`
 
 ## building
 

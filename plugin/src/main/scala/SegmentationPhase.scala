@@ -5,12 +5,11 @@ import dotty.tools.dotc.config.Feature
 import dotty.tools.dotc.core.Contexts.*
 import dotty.tools.dotc.core.Names.*
 import dotty.tools.dotc.core.Symbols.*
-import dotty.tools.dotc.ast.tpd.*
+import dotty.tools.dotc.core.DenotTransformers.*
 import dotty.tools.dotc.core.Types.*
 import dotty.tools.dotc.core.Flags.*
-
+import dotty.tools.dotc.ast.tpd.*
 import dotty.tools.dotc.transform.*
-import dotty.tools.dotc.core.DenotTransformers.*
 import dotty.tools.dotc.util.*
 import dotty.tools.dotc.report
 

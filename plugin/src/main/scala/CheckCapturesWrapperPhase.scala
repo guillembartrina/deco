@@ -22,7 +22,7 @@ class CheckCapturesWrapperPhase extends CheckCaptures:
 
   class CaptureCheckerWrapper(ictx: Context) extends CaptureChecker(ictx):
 
-    override def keepType(tree: Tree): Boolean = true
+    override def keepNuTypes(using Context): Boolean = true
 
     override def checkUnit(unit: CompilationUnit)(using Context): Unit =
       super.checkUnit(unit)
@@ -47,6 +47,8 @@ class CheckCapturesWrapperPhase extends CheckCaptures:
         else if paramTypes.exists(capturesUnenforcedCap) || capturesUnenforcedCap(selfType) || captures.elems.exists(capturesUnenforcedCap) then Suspendable.Maybe
         else if paramTypes.exists(mayCapture) || enclosingClass.typeParams.nonEmpty then Suspendable.Maybe
         else Suspendable.No
+
+      val nuTypes = tree.getAttachment(Recheck.RecheckedTypes).get
 
       tree.foreachSubTree{
         case defDef: DefDef if !defDef.symbol.isConstructor && !isFunctionApply(defDef.symbol) =>
@@ -81,7 +83,10 @@ class CheckCapturesWrapperPhase extends CheckCaptures:
               case tree => (tree, moreArgs)
 
               val (o, ma) = getObjectAndMoreArgs(apply.fun, Nil)
-              val types = (o :: ma ::: apply.args).map(arg => arg.getAttachment(Recheck.RecheckedType).getOrElse(arg.tpe))
+              val types = (o :: ma ::: apply.args).map(arg =>
+                val ntpe = nuTypes.lookup(arg)
+                if ntpe != null then ntpe else arg.tpe
+              )
               val captures = capturedVars(funSym)
             
             if debugInfo then println(s"analyzing call ${apply.show}\n \\ types ${types.map(_.show)}; captures ${captures.show}")

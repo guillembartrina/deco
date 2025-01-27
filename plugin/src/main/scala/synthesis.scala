@@ -4,10 +4,11 @@ package deco.plugin
 
 import dotty.tools.dotc.core.Contexts.*
 import dotty.tools.dotc.core.Names.*
+import dotty.tools.dotc.core.NameKinds.*
 import dotty.tools.dotc.core.Symbols.*
-import dotty.tools.dotc.ast.tpd.*
 import dotty.tools.dotc.core.Types.*
 import dotty.tools.dotc.core.Flags.*
+import dotty.tools.dotc.ast.tpd.*
 
 
 // given a suspendable method, returns the instrumented method and the associated segments
@@ -17,7 +18,9 @@ def segment(defDef: DefDef)(using Context): (DefDef, List[DefDef]) =
 
   val symbol = defDef.symbol.asTerm
   val rhs = defDef.rhs
-  val newSymbol = symbol.copy(name = symbol.name ++ suspendableSuffix).asTerm
+  val newName = SuspendableName(symbol.name)
+  val newUniqueNames = new UniqueNameKind(newName.toString + '$')
+  val newSymbol = symbol.copy(name = newName).asTerm
 
   val newCtx = ctx.withOwner(symbol)
 
@@ -55,8 +58,7 @@ def segment(defDef: DefDef)(using Context): (DefDef, List[DefDef]) =
         // convert Unit to BoxedUnit, because of lambda/closure issues
         val resultType = if symbol.info.resultType.isRef(defn.UnitClass) then defn.BoxedUnitClass.typeRef else symbol.info.resultType
         val newInfo = MethodType(args.map(_.name), args.map(_.info), resultType)
-        val newSymbol = symbol.copy(name = symbol.name ++ s"$suspendableSuffix$$${i + 1}", flags = symbol.flags | Private | Synthetic, info = newInfo).asTerm
-
+        val newSymbol = symbol.copy(name = newUniqueNames.fresh(), flags = symbol.flags | Private | Synthetic, info = newInfo).asTerm
         (newSymbol, args, valLocals ::: varLocals, varLocals.zip(varLocalsArgs))
       )
 

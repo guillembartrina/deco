@@ -4,14 +4,12 @@ import dotty.tools.dotc.plugins.*
 import dotty.tools.dotc.core.Contexts.*
 import dotty.tools.dotc.core.Names.*
 import dotty.tools.dotc.core.Symbols.*
-import dotty.tools.dotc.ast.tpd.*
 import dotty.tools.dotc.core.Types.*
 import dotty.tools.dotc.core.Flags.*
-
-import dotty.tools.dotc.transform.*
 import dotty.tools.dotc.core.DenotTransformers.*
+import dotty.tools.dotc.ast.tpd.*
+import dotty.tools.dotc.transform.*
 import dotty.tools.dotc.util.*
-import dotty.tools.dotc.ast.tpd
 
 
 class CallRedirectionPhase extends PluginPhase with IdentityDenotTransformer:
@@ -61,7 +59,7 @@ class CallRedirectionPhase extends PluginPhase with IdentityDenotTransformer:
           && (!compileScala2Library || (!symbol.isDefinedInSource && !symbol.is(JavaDefined))) then
           assert(!symbol.isDefinedInSource || noCaptureCheckingBypass(symbol))
           // call to compiled suspendable function --> craft symbol
-          val zero = symbol.copy(name = symbol.name ++ suspendableSuffix).asTerm
+          val zero = symbol.copy(name = SuspendableName(symbol.name)).asTerm
           super.transform(tree).subst(List(symbol), List(zero))
         else
           super.transform(tree)

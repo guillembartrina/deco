@@ -1,7 +1,7 @@
 
 ThisBuild / organization := "idk.deco"
 
-ThisBuild / scalaVersion := "3.6.4-RC1-bin-SNAPSHOT"
+ThisBuild / scalaVersion := "3.7.0-RC1-bin-SNAPSHOT"
 
 lazy val library = crossProject(JVMPlatform, JSPlatform, NativePlatform).crossType(CrossType.Pure).in(file("library"))
   .settings(

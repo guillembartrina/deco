@@ -5,15 +5,17 @@ package deco.plugin
 import dotty.tools.dotc.core.Constants.*
 import dotty.tools.dotc.core.Contexts.*
 import dotty.tools.dotc.core.Names.*
+import dotty.tools.dotc.core.NameKinds.*
 import dotty.tools.dotc.core.Symbols.*
-import dotty.tools.dotc.ast.tpd.*
 import dotty.tools.dotc.core.Types.*
 import dotty.tools.dotc.core.Flags.*
+import dotty.tools.dotc.ast.tpd.*
 import dotty.tools.dotc.transform.Erasure.Boxing
 import dotty.tools.dotc.util.Property
 
 
-val suspendableSuffix = "$suspendable"
+private val suspendableSuffix = "$suspendable"
+val SuspendableName: SuffixNameKind = new SuffixNameKind(505, suspendableSuffix) { override def definesNewName = true }
 
 // --- LIBRARY ---
 

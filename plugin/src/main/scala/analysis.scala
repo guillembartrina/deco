@@ -5,15 +5,14 @@ package deco.plugin
 import dotty.tools.dotc.core.Contexts.*
 import dotty.tools.dotc.core.Names.*
 import dotty.tools.dotc.core.Symbols.*
-import dotty.tools.dotc.ast.tpd.*
 import dotty.tools.dotc.core.Types.*
 import dotty.tools.dotc.core.Flags.*
+import dotty.tools.dotc.ast.tpd.*
+import dotty.tools.dotc.cc.*
 import dotty.tools.dotc.report
 
-import dotty.tools.dotc.cc.*
 
-
-// ---  CAPABILITIES ---
+// --- CAPABILITIES ---
 
 def capturesLabel(tpe: Type)(using Context): Boolean =
   def rec(tpe: Type)(using Context): Boolean =
@@ -70,7 +69,11 @@ def mayBeSuspendable(symbol: TermSymbol)(using Context): Boolean =
 // returns whether is the case that the given call may suspend
 def callMaySuspend(tree: Apply)(using Context): Boolean =
   tree.hasAttachment(CallMaySuspend)
-  && (!compileScala2Library || tree.fun.symbol.name.toString() != "synchronized")
+  && (!compileScala2Library || (
+    tree.fun.symbol.name.toString() != "synchronized"
+    && !tree.fun.symbol.name.toString().contains("addOne")
+    && !tree.fun.symbol.name.toString().contains("next")
+  ))
 
 // returns whether the given method is suspendable when capture checking is not available
 def noCaptureCheckingBypass(symbol: TermSymbol)(using Context): Boolean =
@@ -85,29 +88,32 @@ def noCaptureCheckingBypass(symbol: TermSymbol)(using Context): Boolean =
   && symbol != library.boundary__pushFrame
   && symbol != library.boundary__result
   && (
-    (noCaptureChecking
+    (compileScala2Library && (
+      symbol.enclosingClass.asClass.baseClasses.exists(_.flatName.toString().contains("Future"))
+      || symbol.enclosingClass.asClass.baseClasses.exists(_.flatName.toString().contains("Option"))
+    )
+      /*
+      && !ctx.compilationUnit.needsCaptureChecking
+      && !symbol.owner.isPrimitiveValueClass
+      && !symbol.owner.linkedClass.isPrimitiveValueClass
+      && symbol.name.toString() != "synchronized"
+      && !defn.pureMethods.contains(symbol)
+      && !defn.ObjectMethods.contains(symbol)
+      && !defn.pureSimpleClasses.contains(symbol.owner)
+      && symbol.name.toString() != "execute"
+      && symbol.name.startsWith("flatMap")
+      */
+    )
+    /*
+    || (noCaptureChecking
       && !symbol.owner.isPrimitiveValueClass
       && !symbol.owner.linkedClass.isPrimitiveValueClass
       && !defn.pureMethods.contains(symbol)
       && !defn.ObjectMethods.contains(symbol)
       && !defn.pureSimpleClasses.contains(symbol.owner)
       && symbol.name.toString() != "synchronized"
-      /*&& false*/)
-    || (compileScala2Library
-      //&& !ctx.compilationUnit.needsCaptureChecking
-      //&& !symbol.owner.isPrimitiveValueClass
-      //&& !symbol.owner.linkedClass.isPrimitiveValueClass
-      //&& symbol.name.toString() != "synchronized"
-      //&& !defn.pureMethods.contains(symbol)
-      //&& !defn.ObjectMethods.contains(symbol)
-      //&& !defn.pureSimpleClasses.contains(symbol.owner)
-      //&& symbol.name.toString() != "execute"
-      //&& symbol.name.startsWith("flatMap")
-      && (
-        symbol.enclosingClass.flatName.toString().contains("Future")
-        || symbol.enclosingClass.flatName.toString().contains("Option")
-      )
     )
+    */
   )
 
 // returns whether the given tree is a suspension point
@@ -121,8 +127,6 @@ def isSuspensionPoint(tree: Tree)(using Context): Boolean = tree match
       {
         symbol.asTerm == library.boundary_suspend
         || symbol.asTerm == library.Continuation_resume
-        //|| isSuspendable(symbol.asTerm)
-        //|| mayBeSuspendable(symbol.asTerm)
         || callMaySuspend(apply)
         || noCaptureCheckingBypass(symbol.asTerm)
         || isFunctionApply(symbol)
@@ -138,7 +142,7 @@ inline def disallowSuspensionPointIn(tree: Tree)(using Context): Unit =
     report.error("no suspension points allowed at this location", tree.srcPos)
 
 
-// ---  MISC ---
+// --- MISC ---
 
 // returns whether the given symbol is of an unbox method
 def isUnbox(symbol: Symbol)(using Context): Boolean = symbol.name == termName("unbox") && symbol.owner.linkedClass.isPrimitiveValueClass
